@@ -6,10 +6,10 @@ It's useful for doing speed drills when practicing an instrument.
 
 It can be configured to go faster or slower over time.
 
-===========
-
 Sample usage:
+-------------
 
+```SuperCollider
 // Make a metronome that starts at 120 bpm
 // and increases the tempo by 10 bpm every 8 beats.
 var metronome = Gladtronome.new;
@@ -31,10 +31,10 @@ SynthDef(\alternate_click, {
 
 var alternate_click_metronome = Gladtronome.new;
 alternate_click_metronome.start(starting_tempo:100, beats_before_changing_tempo: 16, tempo_change_amount:-5, synthSymbol:\alternate_click);
-
-===========
+```
 
 Installation:
+-------------
 
 Make sure the gladtronome directory, including the audio sub-directory, is in
 one of SuperCollider's extension directories, then reopen SuperCollider or
@@ -46,12 +46,16 @@ User-specific
 OSX			~/Library/Application Support/SuperCollider/Extensions/
 Linux		~/share/SuperCollider/Extensions/
 
+```SuperCollider
 // Evaluate the follow line in SuperCollider to find your user extension directory
 Platform.userExtensionDir;
+```
 
 System-wide (apply to all users)
 OSX			/Library/Application Support/SuperCollider/Extensions/
 Linux		/usr/local/share/SuperCollider/Extensions/
 
+```SuperCollider
 // Evaluate the following line in SuperCollider to find your system extension directory
 Platform.systemExtensionDir;
+```
