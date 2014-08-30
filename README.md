@@ -42,18 +42,20 @@ recompile the class library.
 
 Platform Specific Directories
 
-User-specific
-OSX			~/Library/Application Support/SuperCollider/Extensions/
-Linux		~/share/SuperCollider/Extensions/
+User-specific |
+--------------|--------------------
+OSX		      |~/Library/Application Support/SuperCollider/Extensions/
+Linux		  |~/share/SuperCollider/Extensions/
 
 ```SuperCollider
 // Evaluate the follow line in SuperCollider to find your user extension directory
 Platform.userExtensionDir;
 ```
 
-System-wide (apply to all users)
-OSX			/Library/Application Support/SuperCollider/Extensions/
-Linux		/usr/local/share/SuperCollider/Extensions/
+System-wide (apply to all users) |
+---------------------------------|---------------------------
+OSX								 |/Library/Application Support/SuperCollider/Extensions/
+Linux					     	 |/usr/local/share/SuperCollider/Extensions/
 
 ```SuperCollider
 // Evaluate the following line in SuperCollider to find your system extension directory
