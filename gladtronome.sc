@@ -19,8 +19,9 @@ Gladtronome {
 			duration = this.duration_of_beat(current_tempo);
 
 			while ( {duration > 0.001}, {
-				Synth(synthSymbol);
+				var synth = Synth(synthSymbol);
 				duration.wait;
+				synth.free;
 				current_beat = current_beat + 1;
 				if(current_beat >= beats_before_changing_tempo) {
 					current_beat = 0;
