@@ -10,7 +10,7 @@ Gladtronome {
 		^super.new;
 	}
 
-	start { arg starting_tempo, beats_before_changing_tempo, tempo_change_amount, synthSymbol = \gladtronome_default_synth;
+	start_beats { arg starting_tempo, beats_before_changing_tempo, tempo_change_amount, synthSymbol = \gladtronome_default_synth;
 		Task({
 			var duration, current_beat, current_tempo;
 
@@ -25,6 +25,31 @@ Gladtronome {
 				current_beat = current_beat + 1;
 				if(current_beat >= beats_before_changing_tempo) {
 					current_beat = 0;
+					current_tempo = current_tempo + tempo_change_amount;
+					duration = this.duration_of_beat(current_tempo);
+					("new tempo: " + current_tempo).postln;
+				}
+			});
+
+			"stopped".postln;
+		}).play;
+	}
+
+	start_seconds{ arg starting_tempo, seconds_before_changing_tempo, tempo_change_amount, synthSymbol = \gladtronome_default_synth;
+
+		Task({
+			var duration, time_of_last_tempo_increase, current_tempo;
+
+			time_of_last_tempo_increase = Main.elapsedTime;
+			current_tempo = starting_tempo;
+			duration = this.duration_of_beat(current_tempo);
+
+			while ( {duration > 0.001}, {
+				var synth = Synth(synthSymbol);
+				duration.wait;
+				synth.free;
+				if((Main.elapsedTime - time_of_last_tempo_increase) >= seconds_before_changing_tempo) {
+					time_of_last_tempo_increase = Main.elapsedTime;
 					current_tempo = current_tempo + tempo_change_amount;
 					duration = this.duration_of_beat(current_tempo);
 					("new tempo: " + current_tempo).postln;
