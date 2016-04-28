@@ -1,12 +1,8 @@
 Gladtronome {
-	*new {
-		SynthDef(\gladtronome_default_synth, {
-			var pathToAudioSample = this.class.filenameSymbol.asString.dirname +/+ "Audio/hihat.wav";
-			var buf = Buffer.read(Server.default, pathToAudioSample);
-			var signal = PlayBuf.ar(2, buf.bufnum, BufRateScale.kr(buf.bufnum));
-			Out.ar(0, signal);
-		}).add;
+	var synth;
+	var listener;
 
+	*new {
 		^super.new;
 	}
 
@@ -35,7 +31,31 @@ Gladtronome {
 		}).play;
 	}
 
-	start_seconds{ arg starting_tempo, seconds_before_changing_tempo, tempo_change_amount, synthSymbol = \gladtronome_default_synth;
+	startSeconds { |startingTempo = 120, changeAmount = 10, secondsBetweenChange = 5|
+		// register listener for tempo changes
+		listener = OSCFunc({ |msg, time|
+			("New tempo: " + msg[3]).postln;
+		},'/tr', Server.local.addr);
+
+		synth = SynthDef('gladtronomeStartSeconds', {
+			var numberOfTempoChanges = PulseCount.kr(Impulse.kr(1/secondsBetweenChange)) - 1;
+			var clickBpm = startingTempo + (numberOfTempoChanges * changeAmount);
+			var clickFrequency = clickBpm / 60;
+
+			// send current bpm to client when tempo changes
+			var sendTrigger = SendTrig.kr(Changed.kr(clickBpm), 0, clickBpm);
+
+			var signal = Ringz.ar(Impulse.ar(clickFrequency), 440, 0.2);
+			Out.ar([0, 1], signal);
+		}).add.play;
+	}
+
+	free {
+		synth.free;
+		listener.free;
+	}
+
+	/*start_seconds{ arg starting_tempo, seconds_before_changing_tempo, tempo_change_amount, synthSymbol = \gladtronome_default_synth;
 
 		Task({
 			var duration, time_of_last_tempo_increase, current_tempo;
@@ -58,7 +78,7 @@ Gladtronome {
 
 			"stopped".postln;
 		}).play;
-	}
+	}*/
 
 	duration_of_beat { arg bpm;
 		^60 / bpm;
