@@ -6,29 +6,28 @@ Gladtronome {
 		^super.new;
 	}
 
-	start_beats { arg starting_tempo, beats_before_changing_tempo, tempo_change_amount, synthSymbol = \gladtronome_default_synth;
-		Task({
-			var duration, current_beat, current_tempo;
+	startBeats { |startingTempo = 120, changeAmount = 10, beatsBetweenChange = 8|
+		// register listener for tempo changes
+		listener = OSCFunc({ |msg, time|
+			("New tempo: " + msg[3]).postln;
+		},'/tr', Server.local.addr);
 
-			current_beat = 0;
-			current_tempo = starting_tempo;
-			duration = this.duration_of_beat(current_tempo);
+		synth = SynthDef('gladtronomeStartBeats', {
+			// feed the click signal back into the beginning of the graph
+			var clickFeedback = LocalIn.ar(1);
+			var numberOfTempoChanges = (PulseCount.ar(clickFeedback) / beatsBetweenChange).floor;
+			var clickBpm = startingTempo + (numberOfTempoChanges * changeAmount);
+			var clickFrequency = clickBpm / 60;
 
-			while ( {duration > 0.001}, {
-				var synth = Synth(synthSymbol);
-				duration.wait;
-				synth.free;
-				current_beat = current_beat + 1;
-				if(current_beat >= beats_before_changing_tempo) {
-					current_beat = 0;
-					current_tempo = current_tempo + tempo_change_amount;
-					duration = this.duration_of_beat(current_tempo);
-					("new tempo: " + current_tempo).postln;
-				}
-			});
+			var click = Impulse.ar(clickFrequency);
 
-			"stopped".postln;
-		}).play;
+			// send current bpm to client when tempo changes
+			var sendTrigger = SendTrig.ar(Changed.ar(clickBpm), 0, clickBpm);
+
+			var signal = Ringz.ar(click, 440, 0.2);
+			LocalOut.ar(click);
+			Out.ar([0, 1], signal);
+		}).add.play;
 	}
 
 	startSeconds { |startingTempo = 120, changeAmount = 10, secondsBetweenChange = 5|
@@ -53,34 +52,5 @@ Gladtronome {
 	free {
 		synth.free;
 		listener.free;
-	}
-
-	/*start_seconds{ arg starting_tempo, seconds_before_changing_tempo, tempo_change_amount, synthSymbol = \gladtronome_default_synth;
-
-		Task({
-			var duration, time_of_last_tempo_increase, current_tempo;
-
-			time_of_last_tempo_increase = Main.elapsedTime;
-			current_tempo = starting_tempo;
-			duration = this.duration_of_beat(current_tempo);
-
-			while ( {duration > 0.001}, {
-				var synth = Synth(synthSymbol);
-				duration.wait;
-				synth.free;
-				if((Main.elapsedTime - time_of_last_tempo_increase) >= seconds_before_changing_tempo) {
-					time_of_last_tempo_increase = Main.elapsedTime;
-					current_tempo = current_tempo + tempo_change_amount;
-					duration = this.duration_of_beat(current_tempo);
-					("new tempo: " + current_tempo).postln;
-				}
-			});
-
-			"stopped".postln;
-		}).play;
-	}*/
-
-	duration_of_beat { arg bpm;
-		^60 / bpm;
 	}
 }
