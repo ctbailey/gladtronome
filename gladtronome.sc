@@ -1,18 +1,27 @@
 Gladtronome {
-	var synth;
+	var beatsDef;
+	var beatsSynth;
+
+	var secondsDef;
+	var secondsSynth;
+
 	var listener;
 
 	*new {
 		^super.new;
 	}
 
-	startBeats { |startingTempo = 120, changeAmount = 10, beatsBetweenChange = 8|
+	startBeats { |startingTempo = 120, changeAmount = 10, beatsBetweenChange = 8, filter = true|
 		// register listener for tempo changes
 		listener = OSCFunc({ |msg, time|
 			("New tempo: " + msg[3]).postln;
 		},'/tr', Server.local.addr);
 
-		synth = SynthDef('gladtronomeStartBeats', {
+		beatsSynth = this.getBeatsDef(startingTempo, changeAmount, beatsBetweenChange, filter).play;
+	}
+
+	getBeatsDef { |startingTempo = 120, changeAmount = 10, beatsBetweenChange = 8, filter = true|
+		beatsDef = SynthDef('gladtronomeBeats', {
 			// feed the click signal back into the beginning of the graph
 			var clickFeedback = LocalIn.ar(1);
 			var numberOfTempoChanges = (PulseCount.ar(clickFeedback) / beatsBetweenChange).floor;
@@ -24,33 +33,53 @@ Gladtronome {
 			// send current bpm to client when tempo changes
 			var sendTrigger = SendTrig.ar(Changed.ar(clickBpm), 0, clickBpm);
 
-			var signal = Ringz.ar(click, 440, 0.2);
+			var signal;
+			if (filter) {
+				signal = Ringz.ar(click, 440, 0.2);
+			} {
+				signal = click;
+			};
 			LocalOut.ar(click);
 			Out.ar([0, 1], signal);
-		}).add.play;
+		});
+		^beatsDef;
 	}
 
-	startSeconds { |startingTempo = 120, changeAmount = 10, secondsBetweenChange = 5|
+	startSeconds { |startingTempo = 120, changeAmount = 10, secondsBetweenChange = 5, filter = true|
 		// register listener for tempo changes
 		listener = OSCFunc({ |msg, time|
 			("New tempo: " + msg[3]).postln;
 		},'/tr', Server.local.addr);
 
-		synth = SynthDef('gladtronomeStartSeconds', {
+		secondsSynth = this.getSecondsDef(startingTempo, changeAmount, secondsBetweenChange, filter).play;
+	}
+
+	getSecondsDef { |startingTempo = 120, changeAmount = 10, secondsBetweenChange = 5, filter = true|
+
+		secondsDef = SynthDef('gladtronomeSeconds', {
 			var numberOfTempoChanges = PulseCount.kr(Impulse.kr(1/secondsBetweenChange)) - 1;
 			var clickBpm = startingTempo + (numberOfTempoChanges * changeAmount);
 			var clickFrequency = clickBpm / 60;
 
+			var click = Impulse.ar(clickFrequency);
+
 			// send current bpm to client when tempo changes
 			var sendTrigger = SendTrig.kr(Changed.kr(clickBpm), 0, clickBpm);
-
-			var signal = Ringz.ar(Impulse.ar(clickFrequency), 440, 0.2);
+			var signal;
+			if (filter) {
+				signal = Ringz.ar(click, 440, 0.2);
+			} {
+				signal = click;
+			};
 			Out.ar([0, 1], signal);
-		}).add.play;
+		});
+
+		^secondsDef;
 	}
 
 	free {
-		synth.free;
+		secondsSynth.free;
+		beatsSynth.free;
 		listener.free;
 	}
 }
