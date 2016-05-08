@@ -1,17 +1,13 @@
 Gladtronome {
-	var beatsDef;
-	var beatsSynth;
+	classvar beatsDef;
+	classvar beatsSynth;
 
-	var secondsDef;
-	var secondsSynth;
+	classvar secondsDef;
+	classvar secondsSynth;
 
-	var listener;
+	classvar listener;
 
-	*new {
-		^super.new;
-	}
-
-	startBeats { |startingTempo = 120, changeAmount = 10, beatsBetweenChange = 8, filter = true|
+	*beats { |startingTempo = 120, changeAmount = 10, beatsBetweenChange = 8, filter = true|
 		// register listener for tempo changes
 		listener = OSCFunc({ |msg, time|
 			("New tempo: " + msg[3]).postln;
@@ -20,7 +16,7 @@ Gladtronome {
 		beatsSynth = this.getBeatsDef(startingTempo, changeAmount, beatsBetweenChange, filter).play;
 	}
 
-	getBeatsDef { |startingTempo = 120, changeAmount = 10, beatsBetweenChange = 8, filter = true|
+	*getBeatsDef { |startingTempo = 120, changeAmount = 10, beatsBetweenChange = 8, filter = true|
 		beatsDef = SynthDef('gladtronomeBeats', {
 			// feed the click signal back into the beginning of the graph
 			var clickFeedback = LocalIn.ar(1);
@@ -45,7 +41,7 @@ Gladtronome {
 		^beatsDef;
 	}
 
-	startSeconds { |startingTempo = 120, changeAmount = 10, secondsBetweenChange = 5, filter = true|
+	*seconds { |startingTempo = 120, changeAmount = 10, secondsBetweenChange = 5, filter = true|
 		// register listener for tempo changes
 		listener = OSCFunc({ |msg, time|
 			("New tempo: " + msg[3]).postln;
@@ -54,7 +50,7 @@ Gladtronome {
 		secondsSynth = this.getSecondsDef(startingTempo, changeAmount, secondsBetweenChange, filter).play;
 	}
 
-	getSecondsDef { |startingTempo = 120, changeAmount = 10, secondsBetweenChange = 5, filter = true|
+	*getSecondsDef { |startingTempo = 120, changeAmount = 10, secondsBetweenChange = 5, filter = true|
 
 		secondsDef = SynthDef('gladtronomeSeconds', {
 			var numberOfTempoChanges = PulseCount.kr(Impulse.kr(1/secondsBetweenChange)) - 1;
@@ -77,7 +73,7 @@ Gladtronome {
 		^secondsDef;
 	}
 
-	free {
+	*free {
 		secondsSynth.free;
 		beatsSynth.free;
 		listener.free;
